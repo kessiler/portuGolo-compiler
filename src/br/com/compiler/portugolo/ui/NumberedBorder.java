@@ -32,8 +32,6 @@ class NumberedBorder extends AbstractBorder {
         Color oldColor = g.getColor();
         g.setColor(myColor);
 
-        double r = (double) height / (double) lineHeight;
-        int rows = (int) (r + 0.5);
         int lineLeft = calculateLeft(height) + 10;
 
         int px = 0;
@@ -42,18 +40,14 @@ class NumberedBorder extends AbstractBorder {
 
         int visibleLines = textArea.getHeight() / lineHeight;
         for (int i = 0; i < visibleLines; i++) {
-
-            String str = String.valueOf(i + 1);
+            String str = String.valueOf(i);
             length = str.length();
 
             py = lineHeight * i + 14;
             px = lineLeft - (characterWidth * length) - 2;
-
             g.drawString(str, px, py);
         }
-
         g.drawLine(lineLeft, 0, lineLeft, height);
-
         g.setColor(oldColor);
     }
 

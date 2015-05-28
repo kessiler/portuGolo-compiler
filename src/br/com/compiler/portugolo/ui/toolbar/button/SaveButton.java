@@ -35,7 +35,7 @@ public class SaveButton extends JButton implements Action {
             }
 
             try {
-                if (!absolutePath.equalsIgnoreCase("C:\\null")) {
+                if (!absolutePath.equalsIgnoreCase("nullnull")) {
                     SaveAction.saveToFile(absolutePath, frame.getTextEditor().getText());
                     frame.getLbFilePath().setText(absolutePath);
                     frame.getTextMsg().setText("");
