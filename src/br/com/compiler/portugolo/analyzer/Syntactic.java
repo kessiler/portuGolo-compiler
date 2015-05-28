@@ -168,7 +168,7 @@ public class Syntactic {
     private void tipo() {
         if (casaToken(Tag.ABRE_COLCHETES)) {
             Expressao();
-            P5();
+            checkMoreExpressao();
             if (casaToken(Tag.FECHA_COLCHETES)) {
                 tipoPrimitivo();
             } else {
@@ -185,7 +185,7 @@ public class Syntactic {
         }
     }
 
-    private void P5() {
+    private void checkMoreExpressao() {
         if (casaToken(Tag.VIRGULA)) {
             Expressao();
         }
@@ -293,7 +293,7 @@ public class Syntactic {
 
     private void cmdPara() {
         if (casaToken(Tag.PARA)) {
-            cmdAtrib();
+            prepareCmdAtribOrRotina();
             if (casaToken(Tag.ATE)) {
                 Expressao();
                 expectedToken = null;
@@ -332,10 +332,10 @@ public class Syntactic {
     }
 
     private void cmdAtrib() {
-        P7();
+        prepareAtrib();
     }
 
-    private void P7() {
+    private void prepareAtrib() {
         if (casaToken(Tag.ATRIBUICAO)) {
             Expressao();
             if (!casaToken(Tag.PONTO_VIRGULA)) {
@@ -343,7 +343,7 @@ public class Syntactic {
             }
         } else if (casaToken(Tag.ABRE_COLCHETES)) {
             Expressao();
-            P5();
+            checkMoreExpressao();
             if (!casaToken(Tag.FECHA_COLCHETES)) {
                 erroSintatico(expectedToken);
             } else if (!casaToken(Tag.ATRIBUICAO)) {
@@ -353,7 +353,7 @@ public class Syntactic {
                 }
             }
         } else {
-            erroSintatico("<-- ou {");
+            erroSintatico("<-- ou [");
         }
     }
 
@@ -361,7 +361,7 @@ public class Syntactic {
         if (!casaToken(Tag.ABRE_PARENTESES)) {
             erroSintatico("(");
         } else {
-            P8();
+            prepareParams();
             if (casaToken(Tag.FECHA_PARENTESES)) {
                 if (!casaToken(Tag.PONTO_VIRGULA)) {
                     erroSintatico(";");
@@ -372,9 +372,9 @@ public class Syntactic {
         }
     }
 
-    private void P8() {
+    private void prepareParams() {
         Expressao();
-        P5();
+        checkMoreExpressao();
     }
 
     private void cmdEscreva() {
@@ -451,14 +451,14 @@ public class Syntactic {
     private void ResolveG() {
         if (isToken(Tag.ID) || isToken(Tag.TIPO_LITERAL) || isToken(Tag.TIPO_NUMERICO) || isToken(Tag.TIPO_LOGICO) || isToken(Tag.OU) /*|| isToken(Tag.OPUNARIO_NEGATIVO) */ || isToken(Tag.NAO)) {
             Expressao();
-            P5();
+            checkMoreExpressao();
         }
     }
 
     private void ResolveH() {
         if (casaToken(Tag.ABRE_COLCHETES)) {
             Expressao();
-            P5();
+            checkMoreExpressao();
             if (!casaToken(Tag.FECHA_COLCHETES)) {
                 erroSintatico(" ");
             }
@@ -467,7 +467,7 @@ public class Syntactic {
         }
         if (casaToken(Tag.ABRE_PARENTESES)) {
             Expressao();
-            P5();
+            checkMoreExpressao();
             if (!casaToken(Tag.FECHA_PARENTESES)) {
                 erroSintatico(" ");
             }
