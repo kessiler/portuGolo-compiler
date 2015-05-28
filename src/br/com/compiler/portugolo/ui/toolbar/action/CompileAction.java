@@ -11,7 +11,7 @@ public class CompileAction {
         SymbolTable symbolTable = new SymbolTable();
         Lexical lexical = new Lexical(frame.getTextEditor().getText() + "\0", symbolTable, frame.getTextMsg());
         Syntactic syntactic = new Syntactic(lexical, symbolTable, frame.getTextMsg());
-        Node raiz = syntactic.Compilador();
+        Node raiz = syntactic.compilador();
         if (raiz != null) {
             raiz.printContent();
         }

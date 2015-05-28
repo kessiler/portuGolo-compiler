@@ -433,18 +433,15 @@ public class Syntactic {
         if (isToken(Tag.OU)) {
             ResolveK();
             OpA();
-        }
-        if (casaToken(Tag.ID)) {
+        } else if (casaToken(Tag.ID)) {
             ResolveH();
-        }
-        if (!casaToken(Tag.TIPO_NUMERICO) && casaToken(Tag.TIPO_LITERAL) && casaToken(Tag.TIPO_LOGICO) && casaToken(Tag.TIPO_DANADANAO)) {
-            erroSintatico("numero, literal, logico ou danadanao");
-        }
-        if (casaToken(Tag.ABRE_PARENTESES)) {
+        } else if (casaToken(Tag.ABRE_PARENTESES)) {
             Expressao();
             if (!casaToken(Tag.FECHA_PARENTESES)) {
                 erroSintatico(")");
             }
+        } else if (!casaToken(Tag.TIPO_NUMERICO) && !casaToken(Tag.TIPO_LITERAL) && !casaToken(Tag.VERDADEIRO) && !casaToken(Tag.FALSO)) {
+            erroSintatico("numero, literal, verdadeiro ou falso");
         }
     }
 
@@ -460,19 +457,14 @@ public class Syntactic {
             Expressao();
             checkMoreExpressao();
             if (!casaToken(Tag.FECHA_COLCHETES)) {
-                erroSintatico(" ");
+                erroSintatico("]");
             }
-        } else {
-            erroSintatico(" ");
         }
         if (casaToken(Tag.ABRE_PARENTESES)) {
-            Expressao();
-            checkMoreExpressao();
+            ResolveG();
             if (!casaToken(Tag.FECHA_PARENTESES)) {
-                erroSintatico(" ");
+                erroSintatico(")");
             }
-        } else {
-            erroSintatico(" ");
         }
     }
 
@@ -554,7 +546,7 @@ public class Syntactic {
     }
 
     private void OpUnario() {
-        if (casaToken(Tag.NAO)) {
+        if (!casaToken(Tag.NAO) && !casaToken(Tag.SUBTRACAO)) {
             erroSintatico(" ");
         }
     }
