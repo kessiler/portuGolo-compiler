@@ -67,8 +67,8 @@ public class Syntactic {
     public Node programa() throws Exception {
         Token algoritmo = token;
         if (casaToken(Tag.ALGORITMO)) {
-            prepareToDeclara();
-            listaCmd();
+            Node nodePrepareToDeclara = prepareToDeclara();
+            Node nodeListaCmd = listaCmd();
             if (!casaToken(Tag.FIM)) {
                 erroSintatico("Fim");
                 return null;
@@ -76,223 +76,339 @@ public class Syntactic {
                 erroSintatico("Algoritmo");
                 return null;
             }
-            listaRotina();
-            return new Node(algoritmo);
+            Node listaRotina = listaRotina();
+            Node noAlgoritmo = new Node(algoritmo);
+            if (nodePrepareToDeclara != null) {
+                noAlgoritmo.addChildrens(nodePrepareToDeclara.getChildrens());
+            }
+            if (nodeListaCmd != null) {
+                noAlgoritmo.addChildrens(nodeListaCmd.getChildrens());
+            }
+            if (listaRotina != null) {
+                noAlgoritmo.addChildrens(listaRotina.getChildrens());
+            }
+            return noAlgoritmo;
         } else {
             erroSintatico("Algoritmo");
         }
         return null;
     }
 
-    private void prepareToDeclara() throws Exception {
+    private Node prepareToDeclara() throws Exception {
+        Token declare = token;
         if (casaToken(Tag.DECLARE)) {
-            prepareToDeclaraVar();
+            Node nodeDeclare = new Node(declare);
+            nodeDeclare.addChildren(prepareToDeclaraVar());
+            return nodeDeclare;
         }
+        return null;
     }
 
-    private void prepareToDeclaraVar() throws Exception {
-        declaraVar();
-        checkMoreDeclaraVar();
+    private Node prepareToDeclaraVar() throws Exception {
+        Node nodePrepareToDeclaraVar = new Node(null);
+        nodePrepareToDeclaraVar.addChildren(declaraVar());
+        Node nodeCheckMoreDeclaraVar;
+        if ((nodeCheckMoreDeclaraVar = checkMoreDeclaraVar()) != null) {
+            nodeCheckMoreDeclaraVar.addChildren(nodePrepareToDeclaraVar);
+            return nodeCheckMoreDeclaraVar;
+        }
+        return nodePrepareToDeclaraVar;
     }
 
-    private void declaraVar() throws Exception {
-        tipo();
-        listaId();
+    private Node declaraVar() throws Exception {
+        Node nodeDeclaraVar = new Node(null);
+        nodeDeclaraVar.addChildren(tipo());
+        Node nodeListaId;
+        if ((nodeListaId = listaId()) != null) {
+            nodeDeclaraVar.addChildren(nodeListaId);
+        }
         if (!casaToken(Tag.PONTO_VIRGULA)) {
             erroSintatico("Esperado ponto e virgula");
         }
+        return nodeDeclaraVar;
     }
 
-    private void checkMoreDeclaraVar() throws Exception {
+    private Node checkMoreDeclaraVar() throws Exception {
         if (isToken(Tag.TIPO_LOGICO) || isToken(Tag.TIPO_NUMERICO) || isToken(Tag.TIPO_LITERAL) || isToken(Tag.TIPO_DANADANAO)) {
-            prepareToDeclaraVar();
+            return prepareToDeclaraVar();
+        } else {
+            return null;
         }
     }
 
-    private void listaRotina() throws Exception {
+    private Node listaRotina() throws Exception {
         if (isToken(Tag.SUBROTINA)) {
-            rotina();
-            listaRotina();
+            Node nodeRotina = rotina();
+            Node nodeListaRotina;
+            if ((nodeListaRotina = listaRotina()) != null) {
+                nodeListaRotina.addChildren(nodeRotina);
+                return nodeListaRotina;
+            }
+            return nodeRotina;
         }
+        return null;
     }
 
-    void rotina() throws Exception {
+    private Node rotina() throws Exception {
         if (casaToken(Tag.SUBROTINA)) {
+            Token rotinaId = token;
             if (casaToken(Tag.ID)) {
+                Node nodeRotinaId = new Node(rotinaId);
                 if (casaToken(Tag.ABRE_PARENTESES)) {
-                    listaParam();
+                    Node nodeListaParam;
+                    if ((nodeListaParam = listaParam()) != null) {
+                        nodeRotinaId.addChildren(nodeListaParam);
+                    }
                     if (casaToken(Tag.FECHA_PARENTESES)) {
-                        prepareToDeclara();
+                        Node nodePrepareToDeclara;
+                        if ((nodePrepareToDeclara = prepareToDeclara()) != null) {
+                            nodeRotinaId.addChildren(nodePrepareToDeclara);
+                        }
                         listaCmd();
                         Retorno();
                         if (casaToken(Tag.FIM)) {
                             if (casaToken(Tag.SUBROTINA)) {
                                 if (!casaToken(Tag.ID)) {
-                                    erroSintatico("Esperado o nome da subrotina para ser finalizada");
+                                    erroSintatico("o nome da subrotina");
                                 }
+                                return nodeRotinaId;
                             } else {
-                                erroSintatico("Esperado a tag subrotina para finalizar");
+                                erroSintatico("subrotina");
+                                return nodeRotinaId;
                             }
                         } else {
-                            erroSintatico("Esperado a tag fim para finalizar a subrotina");
+                            erroSintatico("fim");
+                            return nodeRotinaId;
                         }
                     } else {
-                        erroSintatico("Esperado fechamento de parenteses parametros da subrotina");
+                        erroSintatico(")");
+                        return nodeRotinaId;
                     }
                 } else {
-                    erroSintatico("Esperado abertura de parenteses para declarar os parametros da subrotina");
+                    erroSintatico(")");
+                    return nodeRotinaId;
                 }
             } else {
-                erroSintatico("Esperado o nome da subrotina");
+                erroSintatico("o nome da subrotina");
+                return null;
             }
         } else {
-            erroSintatico("Esperado a tag subrotina");
+            erroSintatico("subrotina");
+            return null;
         }
     }
 
-    private void listaParam() throws Exception {
-        param();
-        checkMoreParam();
+    private Node listaParam() throws Exception {
+        Node nodeParam = param();
+        Node nodeCheckNoreParam;
+        if ((nodeCheckNoreParam = checkMoreParam()) != null) {
+            nodeCheckNoreParam.addChildren(nodeParam);
+            return nodeCheckNoreParam;
+        }
+        return nodeParam;
     }
 
-    private void checkMoreParam() throws Exception {
+    private Node checkMoreParam() throws Exception {
         if (casaToken(Tag.VIRGULA)) {
-            listaParam();
+            return listaParam();
+        } else {
+            return null;
         }
     }
 
-    private void param() throws Exception {
-        listaId();
-        tipo();
+    private Node param() throws Exception {
+        Node nodeParam = new Node(null);
+        nodeParam.addChildren(listaId());
+        Node nodeTipo;
+        if ((nodeTipo = tipo()) != null) {
+            nodeParam.addChildren(nodeTipo);
+        }
+        return nodeParam;
     }
 
-    private void listaId() throws Exception {
+    private Node listaId() throws Exception {
         Token auxToken = token;
         if (casaToken(Tag.ID)) {
+            Node nodeId = new Node(auxToken);
             symbolTable.put(auxToken.getLexeme(), auxToken);
-            checkMoreId();
+            Node nodeCheckMoreId;
+            if ((nodeCheckMoreId = checkMoreId()) != null) {
+                nodeCheckMoreId.addChildren(nodeId);
+                return nodeCheckMoreId;
+            }
+            return nodeId;
         } else {
             erroSintatico("Esperado um identificador");
+            return null;
         }
     }
 
-    private void checkMoreId() throws Exception {
+    private Node checkMoreId() throws Exception {
         if (casaToken(Tag.VIRGULA)) {
-            listaId();
+            return listaId();
+        } else {
+            return null;
         }
     }
 
-    private void tipo() throws Exception {
+    private Node tipo() throws Exception {
+        Node nodeTipo = new Node(null);
         if (casaToken(Tag.ABRE_COLCHETES)) {
-            Expressao();
-            checkMoreExpressao();
+            nodeTipo.addChildren(Expressao());
+            Node nodeCheckMoreExpressao;
+            if ((nodeCheckMoreExpressao = checkMoreExpressao()) != null) {
+                nodeTipo.addChildren(nodeCheckMoreExpressao);
+            }
             if (casaToken(Tag.FECHA_COLCHETES)) {
-                tipoPrimitivo();
+                nodeTipo.addChildren(tipoPrimitivo());
+                return nodeTipo;
             } else {
                 erroSintatico("Esperado fecha colchetes");
+                return null;
             }
         } else {
-            tipoPrimitivo();
+            return tipoPrimitivo();
         }
     }
 
-    private void tipoPrimitivo() throws Exception {
-        if (!(casaToken(Tag.TIPO_LOGICO) || casaToken(Tag.TIPO_NUMERICO) || casaToken(Tag.TIPO_LITERAL) || casaToken(Tag.TIPO_DANADANAO))) {
+    private Node tipoPrimitivo() throws Exception {
+        Token tipoPrimitivo = token;
+        if (casaToken(Tag.TIPO_LOGICO)) {
+            return new Node(tipoPrimitivo);
+        } else if (casaToken(Tag.TIPO_NUMERICO)) {
+            return new Node(tipoPrimitivo);
+        } else if (casaToken(Tag.TIPO_LITERAL)) {
+            return new Node(tipoPrimitivo);
+        } else if (casaToken(Tag.TIPO_DANADANAO)) {
+            return new Node(tipoPrimitivo);
+        } else {
             erroSintatico("Esperado um dos tipo primitivo");
+            return null;
         }
     }
 
-    private void checkMoreExpressao() throws Exception {
+    private Node checkMoreExpressao() throws Exception {
         if (casaToken(Tag.VIRGULA)) {
-            Expressao();
+            return Expressao();
         }
+        return null;
     }
 
-    private void listaCmd() throws Exception {
-        cmd();
+    private Node listaCmd() throws Exception {
         if (isToken(Tag.SE) || isToken(Tag.ENQUANTO) || isToken(Tag.PARA)
                 || isToken(Tag.REPITA) || isToken(Tag.ID)
                 || isToken(Tag.ESCREVA) || isToken(Tag.LEIA)) {
-            listaCmd();
+            Node nodeCmd = cmd();
+            Node nodeListaCmd;
+            if ((nodeListaCmd = listaCmd()) != null) {
+                nodeListaCmd.addChildren(nodeCmd);
+            }
+            return nodeListaCmd;
         }
+        return null;
     }
 
-    private void cmd() throws Exception {
+    private Node cmd() throws Exception {
         switch (token.getCode()) {
             case Tag.SE:
-                cmdSe();
-                break;
+                return cmdSe();
             case Tag.ENQUANTO:
-                cmdEnquanto();
-                break;
+                return cmdEnquanto();
             case Tag.PARA:
-                cmdPara();
-                break;
+                return cmdPara();
             case Tag.REPITA:
-                cmdRepita();
-                break;
+                return cmdRepita();
             case Tag.ID:
-                prepareCmdAtribOrRotina();
-                break;
+                return prepareCmdAtribOrRotina();
             case Tag.ESCREVA:
-                cmdEscreva();
-                break;
+                return cmdEscreva();
             case Tag.LEIA:
-                cmdLeia();
-                break;
+                return cmdLeia();
         }
+        return null;
     }
 
-    private void prepareCmdAtribOrRotina() throws Exception {
+    private Node prepareCmdAtribOrRotina() throws Exception {
+        Token id = token;
         if (casaToken(Tag.ID)) {
+            Node nodeCmdAtribOrRotina = new Node(id);
+            Node nodeCmd;
             if (isToken(Tag.ABRE_PARENTESES)) {
-                cmdChamaRotina();
+                if ((nodeCmd = cmdChamaRotina()) != null) {
+                    nodeCmdAtribOrRotina.addChildren(nodeCmd);
+                }
             } else if (isToken(Tag.ATRIBUICAO)) {
-                cmdAtrib();
+                if ((nodeCmd = cmdAtrib()) != null) {
+                    nodeCmdAtribOrRotina.addChildren(nodeCmd);
+                }
             }
+            return nodeCmdAtribOrRotina;
         } else {
             erroSintatico("identificador");
         }
+        return null;
     }
 
-    private void cmdSe() throws Exception {
+    private Node cmdSe() throws Exception {
+        Token se = token;
         if (casaToken(Tag.SE) && casaToken(Tag.ABRE_PARENTESES)) {
-            Expressao();
+            Node nodeSe = new Node(se);
+            nodeSe.addChildren(Expressao());
             if (casaToken(Tag.FECHA_PARENTESES)) {
                 if (casaToken(Tag.INICIO)) {
-                    listaCmd();
+                    Node nodeListaCmd;
+                    if ((nodeListaCmd = listaCmd()) != null) {
+                        nodeSe.addChildren(nodeListaCmd);
+                    }
                     if (casaToken(Tag.FIM)) {
-                        checkSenao();
+                        Node nodeCheckSenao;
+                        if ((nodeCheckSenao = checkSenao()) != null) {
+                            nodeSe.addChildren(nodeCheckSenao);
+                        }
+                        return nodeSe;
                     } else {
                         erroSintatico("Esperado 'fim'");
+                        return nodeSe;
                     }
                 } else {
                     erroSintatico("Esperado 'inicio'");
+                    return nodeSe;
                 }
             } else {
                 erroSintatico("Esperado '}'");
+                return nodeSe;
             }
         }
+        return null;
     }
 
-    private void checkSenao() throws Exception {
+    private Node checkSenao() throws Exception {
         if (isToken(Tag.SENAO)) {
+            Token senao = token;
             if (!casaToken(Tag.SENAO) && !casaToken(Tag.INICIO)) {
                 erroSintatico("Esperado 'Senao'");
             } else {
-                listaCmd();
+                Node nodeSenao = new Node(senao);
+                Node nodeListaCmd;
+                if ((nodeListaCmd = listaCmd()) != null) {
+                    nodeSenao.addChildren(nodeListaCmd);
+                }
                 if (!casaToken(Tag.FIM)) {
                     erroSintatico("Esperado 'fim'");
                 }
+                return nodeSenao;
             }
         }
+        return null;
     }
 
-    private void cmdEnquanto() throws Exception {
+    private Node cmdEnquanto() throws Exception {
+        Token enquanto = token;
         if (!casaToken(Tag.ENQUANTO) && !casaToken(Tag.ABRE_PARENTESES)) {
             erroSintatico("Esperado 'enquanto'");
         } else {
-            Expressao();
+            Node nodeEnquanto = new Node(enquanto);
+            nodeEnquanto.addChildren(Expressao());
             expectedToken = null;
             if (!casaToken(Tag.FACA)) {
                 expectedToken = "faça";
@@ -302,19 +418,26 @@ public class Syntactic {
             if (expectedToken != null) {
                 erroSintatico(expectedToken);
             } else {
-                listaCmd();
+                Node nodeListaCmd;
+                if ((nodeListaCmd = listaCmd()) != null) {
+                    nodeEnquanto.addChildren(nodeListaCmd);
+                }
                 if (!casaToken(Tag.FIM)) {
                     erroSintatico("fim");
                 }
+                return nodeEnquanto;
             }
         }
+        return null;
     }
 
-    private void cmdPara() throws Exception {
+    private Node cmdPara() throws Exception {
+        Token para = token;
         if (casaToken(Tag.PARA)) {
-            prepareCmdAtribOrRotina();
+            Node nodePara = new Node(para);
+            nodePara.addChildren(prepareCmdAtribOrRotina());
             if (casaToken(Tag.ATE)) {
-                Expressao();
+                nodePara.addChildren(Expressao());
                 expectedToken = null;
                 if (!casaToken(Tag.FACA)) {
                     expectedToken = "faça";
@@ -324,7 +447,10 @@ public class Syntactic {
                 if (expectedToken != null) {
                     erroSintatico(expectedToken);
                 } else {
-                    listaCmd();
+                    Node nodeListaCmd;
+                    if ((nodeListaCmd = listaCmd()) != null) {
+                        nodePara.addChildren(nodeListaCmd);
+                    }
                     if (!casaToken(Tag.FIM)) {
                         erroSintatico("fim");
                     }
@@ -332,55 +458,75 @@ public class Syntactic {
             } else {
                 erroSintatico("ate");
             }
+            return nodePara;
         } else {
             erroSintatico("para");
         }
+        return null;
     }
 
-    private void cmdRepita() throws Exception {
+    private Node cmdRepita() throws Exception {
+        Token repita = token;
         if (casaToken(Tag.REPITA)) {
-            listaCmd();
+            Node nodeRepita = new Node(repita);
+            Node nodeListaCmd;
+            if ((nodeListaCmd = listaCmd()) != null) {
+                nodeRepita.addChildren(nodeListaCmd);
+            }
             if (casaToken(Tag.ATE)) {
-                Expressao();
+                nodeRepita.addChildren(Expressao());
             } else {
                 erroSintatico("ate");
             }
+            return nodeRepita;
         } else {
             erroSintatico("repita");
         }
+        return null;
     }
 
-    private void cmdAtrib() throws Exception {
-        prepareAtrib();
+    private Node cmdAtrib() throws Exception {
+        return prepareAtrib();
     }
 
-    private void prepareAtrib() throws Exception {
+    private Node prepareAtrib() throws Exception {
+        Token atribuicao = token;
         if (casaToken(Tag.ATRIBUICAO)) {
-            Expressao();
+            Node nodeAtribuicao = new Node(atribuicao);
+            nodeAtribuicao.addChildren(Expressao());
             if (!casaToken(Tag.PONTO_VIRGULA)) {
                 erroSintatico(";");
             }
+            return nodeAtribuicao;
         } else if (casaToken(Tag.ABRE_COLCHETES)) {
-            Expressao();
-            checkMoreExpressao();
+            Node nodeN = new Node(null);
+            nodeN.addChildren(Expressao());
+            Node nodeCheckMoreExpressao;
+            if ((nodeCheckMoreExpressao = checkMoreExpressao()) != null) {
+                nodeN.addChildren(nodeCheckMoreExpressao);
+            }
             if (!casaToken(Tag.FECHA_COLCHETES)) {
                 erroSintatico(expectedToken);
             } else if (!casaToken(Tag.ATRIBUICAO)) {
-                Expressao();
+                Node nodeAtribuicao = new Node(atribuicao);
+                nodeAtribuicao.addChildren(Expressao());
                 if (!casaToken(Tag.PONTO_VIRGULA)) {
                     erroSintatico(";");
                 }
+                return nodeAtribuicao;
             }
         } else {
             erroSintatico("<-- ou [");
         }
+        return null;
     }
 
-    private void cmdChamaRotina() throws Exception {
+    private Node cmdChamaRotina() throws Exception {
         if (!casaToken(Tag.ABRE_PARENTESES)) {
             erroSintatico("(");
         } else {
-            prepareParams();
+            Node nodeCmdChamaRotina = new Node(null);
+            nodeCmdChamaRotina.addChildren(prepareParams());
             if (casaToken(Tag.FECHA_PARENTESES)) {
                 if (!casaToken(Tag.PONTO_VIRGULA)) {
                     erroSintatico(";");
@@ -388,16 +534,24 @@ public class Syntactic {
             } else {
                 erroSintatico(")");
             }
+            return nodeCmdChamaRotina;
         }
+        return null;
     }
 
-    private void prepareParams() throws Exception {
-        Expressao();
-        checkMoreExpressao();
+    private Node prepareParams() throws Exception {
+        Node nodePrepareParams = new Node(null);
+        nodePrepareParams.addChildren(Expressao());
+        Node nodeCheckMoreExpressao;
+        if ((nodeCheckMoreExpressao = checkMoreExpressao()) != null) {
+            nodePrepareParams.addChildren(nodeCheckMoreExpressao);
+        }
+        return nodePrepareParams;
     }
 
-    private void cmdEscreva() throws Exception {
+    private Node cmdEscreva() throws Exception {
         expectedToken = null;
+        Token escreva = token;
         if (!casaToken(Tag.ESCREVA)) {
             expectedToken = "escreva";
         } else if (!casaToken(Tag.ABRE_PARENTESES)) {
@@ -406,7 +560,8 @@ public class Syntactic {
         if (expectedToken != null) {
             erroSintatico(expectedToken);
         } else {
-            Expressao();
+            Node nodeEscreva = new Node(escreva);
+            nodeEscreva.addChildren(Expressao());
             if (!casaToken(Tag.FECHA_PARENTESES)) {
                 expectedToken = ")";
             } else if (!casaToken(Tag.PONTO_VIRGULA)) {
@@ -415,11 +570,14 @@ public class Syntactic {
             if (expectedToken != null) {
                 erroSintatico(expectedToken);
             }
+            return nodeEscreva;
         }
+        return null;
     }
 
-    private void cmdLeia() throws Exception {
+    private Node cmdLeia() throws Exception {
         expectedToken = null;
+        Token leia = token;
         if (!casaToken(Tag.LEIA)) {
             expectedToken = "leia";
         } else if (!casaToken(Tag.ABRE_PARENTESES)) {
@@ -428,7 +586,8 @@ public class Syntactic {
         if (expectedToken != null) {
             erroSintatico(expectedToken);
         } else {
-            Expressao();
+            Node nodeLeia = new Node(leia);
+            nodeLeia.addChildren(Expressao());
             expectedToken = null;
             if (!casaToken(Tag.FECHA_PARENTESES)) {
                 expectedToken = ")";
@@ -438,19 +597,28 @@ public class Syntactic {
             if (expectedToken != null) {
                 erroSintatico(expectedToken);
             }
+            return nodeLeia;
         }
+        return null;
     }
 
 
-    private void Retorno() throws Exception {
+    private Node Retorno() throws Exception {
+        Token retorno = token;
         if (casaToken(Tag.RETORNE)) {
-            Expressao();
+            Node nodeRetorno = new Node(retorno);
+            Node nodeExpressao;
+            if ((nodeExpressao = Expressao()) != null) {
+                nodeRetorno.addChildren(nodeExpressao);
+            }
         }
+        return null;
     }
 
-    private void Expressao() throws Exception {
+    private Node Expressao() throws Exception {
         P2();
         P1();
+        return null;
     }
 
     private void P1() throws Exception {
