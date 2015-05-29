@@ -11,9 +11,13 @@ public class CompileAction {
         SymbolTable symbolTable = new SymbolTable();
         Lexical lexical = new Lexical(frame.getTextEditor().getText() + "\0", symbolTable, frame.getTextMsg());
         Syntactic syntactic = new Syntactic(lexical, symbolTable, frame.getTextMsg());
-        Node raiz = syntactic.compilador();
-        if (raiz != null) {
-            raiz.printContent();
+        try {
+            Node raiz = syntactic.compilador();
+            if (raiz != null) {
+                raiz.printContent();
+            }
+        } catch (Exception ex) {
+            frame.getTextMsg().append(ex.getMessage());
         }
         return frame.getTextMsg().getText().isEmpty();
     }

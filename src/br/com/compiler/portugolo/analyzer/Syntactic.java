@@ -13,19 +13,34 @@ public class Syntactic {
     private final SymbolTable symbolTable;
     private final JTextArea consoleOutput;
     private Token token;
-    private String expectedToken = null;
+    private String expectedToken;
+    private int numErrors;
 
     public Syntactic(Lexical lexical, SymbolTable symbolTable, JTextArea consoleOutput) {
         this.lexical = lexical;
         this.symbolTable = symbolTable;
         this.consoleOutput = consoleOutput;
         this.token = lexical.proxToken();
+        this.numErrors = 0;
+        this.expectedToken = null;
     }
 
     // Reporta erro sintatico ao usuario - Aqui deve ser tratado o Metodo do Panico
-    public void erroSintatico(String esperado) {
+    public void erroSintatico(String esperado) throws Exception {
         this.consoleOutput.append("Erro sintatico na linha " + token.getLine() + " e na coluna " + token.getColumn());
         this.consoleOutput.append("\nEsperado: " + esperado + "\nEncontrado: " + token.getLexeme() + "\n");
+        if (++numErrors > 7) {
+            throw new Exception("Stopped by panic");
+        } else {
+            proxTokenAfterSync();
+        }
+    }
+
+    private void proxTokenAfterSync() {
+        token = lexical.proxToken();
+        if (!casaToken(Tag.PONTO_VIRGULA) && !casaToken(Tag.FECHA_PARENTESES) && !casaToken(Tag.FIM) && token != null) {
+            proxTokenAfterSync();
+        }
     }
 
     public boolean casaToken(int code) {
@@ -40,7 +55,7 @@ public class Syntactic {
         return token.getCode() == code;
     }
 
-    public Node compilador() {
+    public Node compilador() throws Exception {
         Node noPrograma = programa();
         if (!casaToken(Tag.EOF)) {
             erroSintatico("Fim de Arquivo");
@@ -49,7 +64,7 @@ public class Syntactic {
         return noPrograma;
     }
 
-    public Node programa() {
+    public Node programa() throws Exception {
         Token algoritmo = token;
         if (casaToken(Tag.ALGORITMO)) {
             prepareToDeclara();
@@ -63,22 +78,24 @@ public class Syntactic {
             }
             listaRotina();
             return new Node(algoritmo);
+        } else {
+            erroSintatico("Algoritmo");
         }
         return null;
     }
 
-    private void prepareToDeclara() {
+    private void prepareToDeclara() throws Exception {
         if (casaToken(Tag.DECLARE)) {
             prepareToDeclaraVar();
         }
     }
 
-    private void prepareToDeclaraVar() {
+    private void prepareToDeclaraVar() throws Exception {
         declaraVar();
         checkMoreDeclaraVar();
     }
 
-    private void declaraVar() {
+    private void declaraVar() throws Exception {
         tipo();
         listaId();
         if (!casaToken(Tag.PONTO_VIRGULA)) {
@@ -86,20 +103,20 @@ public class Syntactic {
         }
     }
 
-    private void checkMoreDeclaraVar() {
-        if (casaToken(Tag.TIPO_LOGICO) || casaToken(Tag.TIPO_NUMERICO) || casaToken(Tag.TIPO_LITERAL) || casaToken(Tag.TIPO_DANADANAO)) {
+    private void checkMoreDeclaraVar() throws Exception {
+        if (isToken(Tag.TIPO_LOGICO) || isToken(Tag.TIPO_NUMERICO) || isToken(Tag.TIPO_LITERAL) || isToken(Tag.TIPO_DANADANAO)) {
             prepareToDeclaraVar();
         }
     }
 
-    private void listaRotina() {
+    private void listaRotina() throws Exception {
         if (isToken(Tag.SUBROTINA)) {
             rotina();
             listaRotina();
         }
     }
 
-    void rotina() {
+    void rotina() throws Exception {
         if (casaToken(Tag.SUBROTINA)) {
             if (casaToken(Tag.ID)) {
                 if (casaToken(Tag.ABRE_PARENTESES)) {
@@ -133,23 +150,23 @@ public class Syntactic {
         }
     }
 
-    private void listaParam() {
+    private void listaParam() throws Exception {
         param();
         checkMoreParam();
     }
 
-    private void checkMoreParam() {
+    private void checkMoreParam() throws Exception {
         if (casaToken(Tag.VIRGULA)) {
             listaParam();
         }
     }
 
-    private void param() {
+    private void param() throws Exception {
         listaId();
         tipo();
     }
 
-    private void listaId() {
+    private void listaId() throws Exception {
         Token auxToken = token;
         if (casaToken(Tag.ID)) {
             symbolTable.put(auxToken.getLexeme(), auxToken);
@@ -159,13 +176,13 @@ public class Syntactic {
         }
     }
 
-    private void checkMoreId() {
+    private void checkMoreId() throws Exception {
         if (casaToken(Tag.VIRGULA)) {
             listaId();
         }
     }
 
-    private void tipo() {
+    private void tipo() throws Exception {
         if (casaToken(Tag.ABRE_COLCHETES)) {
             Expressao();
             checkMoreExpressao();
@@ -179,19 +196,19 @@ public class Syntactic {
         }
     }
 
-    private void tipoPrimitivo() {
+    private void tipoPrimitivo() throws Exception {
         if (!(casaToken(Tag.TIPO_LOGICO) || casaToken(Tag.TIPO_NUMERICO) || casaToken(Tag.TIPO_LITERAL) || casaToken(Tag.TIPO_DANADANAO))) {
             erroSintatico("Esperado um dos tipo primitivo");
         }
     }
 
-    private void checkMoreExpressao() {
+    private void checkMoreExpressao() throws Exception {
         if (casaToken(Tag.VIRGULA)) {
             Expressao();
         }
     }
 
-    private void listaCmd() {
+    private void listaCmd() throws Exception {
         cmd();
         if (isToken(Tag.SE) || isToken(Tag.ENQUANTO) || isToken(Tag.PARA)
                 || isToken(Tag.REPITA) || isToken(Tag.ID)
@@ -200,7 +217,7 @@ public class Syntactic {
         }
     }
 
-    private void cmd() {
+    private void cmd() throws Exception {
         switch (token.getCode()) {
             case Tag.SE:
                 cmdSe();
@@ -226,7 +243,7 @@ public class Syntactic {
         }
     }
 
-    private void prepareCmdAtribOrRotina() {
+    private void prepareCmdAtribOrRotina() throws Exception {
         if (casaToken(Tag.ID)) {
             if (isToken(Tag.ABRE_PARENTESES)) {
                 cmdChamaRotina();
@@ -238,14 +255,14 @@ public class Syntactic {
         }
     }
 
-    private void cmdSe() {
+    private void cmdSe() throws Exception {
         if (casaToken(Tag.SE) && casaToken(Tag.ABRE_PARENTESES)) {
             Expressao();
             if (casaToken(Tag.FECHA_PARENTESES)) {
                 if (casaToken(Tag.INICIO)) {
                     listaCmd();
                     if (casaToken(Tag.FIM)) {
-                        P6();
+                        checkSenao();
                     } else {
                         erroSintatico("Esperado 'fim'");
                     }
@@ -258,18 +275,20 @@ public class Syntactic {
         }
     }
 
-    private void P6() {
-        if (!casaToken(Tag.SENAO) && !casaToken(Tag.INICIO)) {
-            erroSintatico("Esperado 'Senao'");
-        } else {
-            listaCmd();
-            if (!casaToken(Tag.FIM)) {
-                erroSintatico("Esperado 'fim'");
+    private void checkSenao() throws Exception {
+        if (isToken(Tag.SENAO)) {
+            if (!casaToken(Tag.SENAO) && !casaToken(Tag.INICIO)) {
+                erroSintatico("Esperado 'Senao'");
+            } else {
+                listaCmd();
+                if (!casaToken(Tag.FIM)) {
+                    erroSintatico("Esperado 'fim'");
+                }
             }
         }
     }
 
-    private void cmdEnquanto() {
+    private void cmdEnquanto() throws Exception {
         if (!casaToken(Tag.ENQUANTO) && !casaToken(Tag.ABRE_PARENTESES)) {
             erroSintatico("Esperado 'enquanto'");
         } else {
@@ -291,7 +310,7 @@ public class Syntactic {
         }
     }
 
-    private void cmdPara() {
+    private void cmdPara() throws Exception {
         if (casaToken(Tag.PARA)) {
             prepareCmdAtribOrRotina();
             if (casaToken(Tag.ATE)) {
@@ -318,7 +337,7 @@ public class Syntactic {
         }
     }
 
-    private void cmdRepita() {
+    private void cmdRepita() throws Exception {
         if (casaToken(Tag.REPITA)) {
             listaCmd();
             if (casaToken(Tag.ATE)) {
@@ -331,11 +350,11 @@ public class Syntactic {
         }
     }
 
-    private void cmdAtrib() {
+    private void cmdAtrib() throws Exception {
         prepareAtrib();
     }
 
-    private void prepareAtrib() {
+    private void prepareAtrib() throws Exception {
         if (casaToken(Tag.ATRIBUICAO)) {
             Expressao();
             if (!casaToken(Tag.PONTO_VIRGULA)) {
@@ -357,7 +376,7 @@ public class Syntactic {
         }
     }
 
-    private void cmdChamaRotina() {
+    private void cmdChamaRotina() throws Exception {
         if (!casaToken(Tag.ABRE_PARENTESES)) {
             erroSintatico("(");
         } else {
@@ -372,12 +391,12 @@ public class Syntactic {
         }
     }
 
-    private void prepareParams() {
+    private void prepareParams() throws Exception {
         Expressao();
         checkMoreExpressao();
     }
 
-    private void cmdEscreva() {
+    private void cmdEscreva() throws Exception {
         expectedToken = null;
         if (!casaToken(Tag.ESCREVA)) {
             expectedToken = "escreva";
@@ -399,7 +418,7 @@ public class Syntactic {
         }
     }
 
-    private void cmdLeia() {
+    private void cmdLeia() throws Exception {
         expectedToken = null;
         if (!casaToken(Tag.LEIA)) {
             expectedToken = "leia";
@@ -423,131 +442,94 @@ public class Syntactic {
     }
 
 
-    private void Retorno() {
+    private void Retorno() throws Exception {
         if (casaToken(Tag.RETORNE)) {
             Expressao();
         }
     }
 
-    private void Expressao() {
-        if (isToken(Tag.OU)) {
-            ResolveK();
-            OpA();
-        } else if (casaToken(Tag.ID)) {
-            ResolveH();
+    private void Expressao() throws Exception {
+        P2();
+        P1();
+    }
+
+    private void P1() throws Exception {
+        if (casaToken(Tag.OU) || casaToken(Tag.E)) {
+            P2();
+            P1();
+        }
+    }
+
+    private void P2() throws Exception {
+        P3();
+        P4();
+    }
+
+    private void P4() throws Exception {
+        if (casaToken(Tag.DIFERENTE) || casaToken(Tag.IGUAL) || casaToken(Tag.MAIOR) || casaToken(Tag.MAIOR_IGUAL) || casaToken(Tag.MENOR) || casaToken(Tag.MENOR_IGUAL)) {
+            P3();
+            P4();
+        }
+    }
+
+    private void P3() throws Exception {
+        P10();
+        P5();
+    }
+
+    private void P5() throws Exception {
+        if (casaToken(Tag.SUBTRACAO) || casaToken(Tag.ADICAO)) {
+            P10();
+            P5();
+        }
+    }
+
+    private void P10() throws Exception {
+        P12();
+        P6();
+    }
+
+    private void P6() throws Exception {
+        if (casaToken(Tag.DIVISAO) || casaToken(Tag.MULTIPLICACAO)) {
+            P12();
+            P6();
+        }
+    }
+
+    private void P12() throws Exception {
+        P14();
+        P7();
+    }
+
+    private void P7() throws Exception {
+        if (casaToken(Tag.SUBTRACAO) || casaToken(Tag.NAO)) {
+            P14();
+            P7();
+        }
+    }
+
+    private void P14() throws Exception {
+        if (casaToken(Tag.ID)) {
+            if (casaToken(Tag.ABRE_COLCHETES)) {
+                Expressao();
+                checkMoreExpressao();
+                if (!casaToken(Tag.FECHA_COLCHETES)) {
+                    erroSintatico("]");
+                }
+            } else if (casaToken(Tag.ABRE_PARENTESES)) {
+                prepareParams();
+                if (!casaToken(Tag.FECHA_PARENTESES)) {
+                    erroSintatico(")");
+                }
+            } else {
+                P14();
+            }
+        } else if (casaToken(Tag.NUMERICO_INT) || casaToken(Tag.NUMERICO_REAL) || casaToken(Tag.CONST_STRING) || casaToken(Tag.VERDADEIRO) || casaToken(Tag.FALSO)) {
         } else if (casaToken(Tag.ABRE_PARENTESES)) {
             Expressao();
             if (!casaToken(Tag.FECHA_PARENTESES)) {
                 erroSintatico(")");
             }
-        } else if (!casaToken(Tag.TIPO_NUMERICO) && !casaToken(Tag.TIPO_LITERAL) && !casaToken(Tag.VERDADEIRO) && !casaToken(Tag.FALSO)) {
-            erroSintatico("numero, literal, verdadeiro ou falso");
-        }
-    }
-
-    private void ResolveG() {
-        if (isToken(Tag.ID) || isToken(Tag.TIPO_LITERAL) || isToken(Tag.TIPO_NUMERICO) || isToken(Tag.TIPO_LOGICO) || isToken(Tag.OU) /*|| isToken(Tag.OPUNARIO_NEGATIVO) */ || isToken(Tag.NAO)) {
-            Expressao();
-            checkMoreExpressao();
-        }
-    }
-
-    private void ResolveH() {
-        if (casaToken(Tag.ABRE_COLCHETES)) {
-            Expressao();
-            checkMoreExpressao();
-            if (!casaToken(Tag.FECHA_COLCHETES)) {
-                erroSintatico("]");
-            }
-        }
-        if (casaToken(Tag.ABRE_PARENTESES)) {
-            ResolveG();
-            if (!casaToken(Tag.FECHA_PARENTESES)) {
-                erroSintatico(")");
-            }
-        }
-    }
-
-    private void ResolveK() {
-        if (casaToken(Tag.OU)) {
-            OpA();
-            ResolveK();
-        }
-    }
-
-    private void OpA() {
-        if (isToken(Tag.NAO)) {
-            OpB();
-            ResolveL();
-        }
-    }
-
-    private void ResolveL() {
-        if (casaToken(Tag.E)) {
-            OpB();
-            ResolveL();
-        }
-    }
-
-    private void OpB() {
-        if (isToken(Tag.NAO)) {
-            OpC();
-            ResolveM();
-        }
-    }
-
-    private void ResolveM() {
-        if (casaToken(Tag.IGUAL) || casaToken(Tag.DIFERENTE)) {
-            OpC();
-            ResolveM();
-        }
-    }
-
-    private void OpC() {
-        if (isToken(Tag.NAO)) {
-            OpD();
-            ResolveN();
-        }
-    }
-
-    private void ResolveN() {
-        if (casaToken(Tag.MAIOR) || casaToken(Tag.MENOR) || casaToken(Tag.MAIOR_IGUAL) || casaToken(Tag.MENOR_IGUAL)) {
-            OpD();
-            ResolveN();
-        }
-    }
-
-    private void OpD() {
-        if (isToken(Tag.NAO)) {
-            OpE();
-            ResolveO();
-        }
-    }
-
-    private void ResolveO() {
-        if (casaToken(Tag.ADICAO) || casaToken(Tag.SUBTRACAO)) {
-            OpE();
-            ResolveO();
-        }
-    }
-
-    private void OpE() {
-        if (isToken(Tag.NAO)) {
-            OpUnario();
-            ResolveP();
-        }
-    }
-
-    private void ResolveP() {
-        if (casaToken(Tag.MULTIPLICACAO) || casaToken(Tag.DIVISAO)) {
-            OpUnario();
-            ResolveP();
-        }
-    }
-
-    private void OpUnario() {
-        if (!casaToken(Tag.NAO) && !casaToken(Tag.SUBTRACAO)) {
-            erroSintatico(" ");
         }
     }
 

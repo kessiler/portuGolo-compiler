@@ -10,5 +10,5 @@ fim algoritmo
 subrotina Calcula(a, b numérico) 
     declare dánadanão c;
     c <-- a * b;
-    retorne c;
+    retorne c
 fim subrotina Calcula
