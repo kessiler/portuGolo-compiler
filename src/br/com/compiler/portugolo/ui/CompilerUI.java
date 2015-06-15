@@ -11,19 +11,12 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.KeyStroke;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
+import br.com.compiler.portugolo.ui.highlighter.component.JEditTextArea;
+import br.com.compiler.portugolo.ui.highlighter.tokenMarker.PortuGoloTokenMarker;
 import br.com.compiler.portugolo.ui.toolbar.button.*;
 
 @SuppressWarnings("serial")
@@ -37,7 +30,7 @@ public class CompilerUI extends JFrame {
     private final CutButton btnCut;
     private final CompileButton btnCompile;
     private final KeyListener keyListener;
-    private final JTextArea textEditor;
+    private final JEditTextArea textEditor;
     private final JLabel lbStatus;
     private final JLabel lbFilePath;
     private final JTextArea textMsg;
@@ -69,7 +62,7 @@ public class CompilerUI extends JFrame {
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 650);
-        setTitle("Compilador");
+        setTitle("Compilador - PortuGolo");
         setMinimumSize(new Dimension(800, 650));
         setLocationRelativeTo(null);
         final JPanel contentPane = new JPanel();
@@ -197,12 +190,9 @@ public class CompilerUI extends JFrame {
         final JPanel panelEditor = new JPanel();
         panelEditor.addKeyListener(keyListener);
 
-        final JScrollPane scrollPaneEditor = new JScrollPane(panelEditor);
-        scrollPaneEditor.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-        scrollPaneEditor.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        scrollPaneEditor.addKeyListener(keyListener);
-
-        textEditor = new JTextArea();
+        textEditor = new JEditTextArea();
+        textEditor.setTokenMarker(new PortuGoloTokenMarker());
+        textEditor.setEditable(true);
         textEditor.setBorder(new NumberedBorder());
         textEditor.addKeyListener(keyListener);
         textEditor.getInputMap(JPanel.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK), "none");
@@ -211,7 +201,7 @@ public class CompilerUI extends JFrame {
         textEditor.getInputMap(JPanel.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.CTRL_DOWN_MASK), "none");
         panelEditor.setLayout(new BoxLayout(panelEditor, BoxLayout.X_AXIS));
         panelEditor.add(textEditor);
-        panelCentral.add(scrollPaneEditor, BorderLayout.CENTER);
+        panelCentral.add(panelEditor, BorderLayout.CENTER);
 
         final JPanel panelMsg = new JPanel();
         panelMsg.addKeyListener(keyListener);
@@ -256,7 +246,7 @@ public class CompilerUI extends JFrame {
         return new ImageIcon(this.getClass().getResource("/images/" + iconName));
     }
 
-    public JTextArea getTextEditor() {
+    public JEditTextArea getTextEditor() {
         return textEditor;
     }
 

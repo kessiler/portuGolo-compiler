@@ -1,5 +1,7 @@
 package br.com.compiler.portugolo.ui;
 
+import br.com.compiler.portugolo.ui.highlighter.component.JEditTextArea;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
@@ -7,7 +9,6 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Insets;
 
-import javax.swing.JTextArea;
 import javax.swing.border.AbstractBorder;
 
 class NumberedBorder extends AbstractBorder {
@@ -24,7 +25,7 @@ class NumberedBorder extends AbstractBorder {
     @Override
     public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
         final int characterWidth = 7;
-        JTextArea textArea = (JTextArea) c;
+        JEditTextArea textArea = (JEditTextArea) c;
         Font font = textArea.getFont();
         FontMetrics metrics = g.getFontMetrics(font);
         lineHeight = metrics.getHeight();
