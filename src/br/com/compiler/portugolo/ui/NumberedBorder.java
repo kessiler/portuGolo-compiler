@@ -54,8 +54,7 @@ class NumberedBorder extends AbstractBorder {
 
     @Override
     public Insets getBorderInsets(Component c) {
-        int left = calculateLeft(c.getHeight()) + 13;
-        return new Insets(1, left, 1, 1);
+        return new Insets(1, 27, 1, 1);
     }
 
     private int calculateLeft(int height) {
