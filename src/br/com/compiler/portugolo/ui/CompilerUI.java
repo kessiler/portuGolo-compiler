@@ -194,7 +194,7 @@ public class CompilerUI extends JFrame {
         textEditor.setTokenMarker(new PortuGoloTokenMarker());
         textEditor.setEditable(true);
         textEditor.setBorder(new NumberedBorder());
-        textEditor.addKeyListener(keyListener);
+        textEditor.setKeyListener(keyListener);
         textEditor.getInputMap(JPanel.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK), "none");
         textEditor.getInputMap(JPanel.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_DOWN_MASK), "none");
         textEditor.getInputMap(JPanel.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK), "none");

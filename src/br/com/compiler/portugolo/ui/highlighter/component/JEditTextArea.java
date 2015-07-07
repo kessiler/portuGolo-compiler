@@ -131,6 +131,9 @@ public class JEditTextArea extends JComponent {
     public void setInputHandler(InputHandler inputHandler) {
         this.inputHandler = inputHandler;
     }
+    public void setKeyListener(KeyListener keyListener) {
+        this.keyListener = keyListener;
+    }
 
     /**
      * Returns true if the caret is blinking, false otherwise.
@@ -1381,12 +1384,15 @@ public class JEditTextArea extends JComponent {
         switch (evt.getID()) {
             case KeyEvent.KEY_TYPED:
                 inputHandler.keyTyped(evt);
+                this.keyListener.keyTyped(evt);
                 break;
             case KeyEvent.KEY_PRESSED:
                 inputHandler.keyPressed(evt);
+                this.keyListener.keyPressed(evt);
                 break;
             case KeyEvent.KEY_RELEASED:
                 inputHandler.keyReleased(evt);
+                this.keyListener.keyReleased(evt);
                 break;
         }
     }
@@ -1399,6 +1405,7 @@ public class JEditTextArea extends JComponent {
     protected static JEditTextArea focusedComponent;
     protected static Timer caretTimer;
 
+    protected KeyListener keyListener;
     protected TextAreaPainter painter;
 
     protected JPopupMenu popup;

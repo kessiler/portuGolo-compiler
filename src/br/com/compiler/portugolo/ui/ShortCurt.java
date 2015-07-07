@@ -35,21 +35,6 @@ public class ShortCurt implements KeyListener {
                     new SaveButton().executeAction(compUi);
                 }
                 break;
-            case KeyEvent.VK_C:
-                if (isCtrlDown) {
-                    new CopyButton().executeAction(compUi);
-                }
-                break;
-            case KeyEvent.VK_V:
-                if (isCtrlDown) {
-                    new PasteButton().executeAction(compUi);
-                }
-                break;
-            case KeyEvent.VK_X:
-                if (isCtrlDown) {
-                    new CutButton().executeAction(compUi);
-                }
-                break;
             case KeyEvent.VK_F8:
                 new CompileButton().executeAction(compUi);
                 break;

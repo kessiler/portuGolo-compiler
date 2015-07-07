@@ -10,6 +10,7 @@
 package br.com.compiler.portugolo.ui.highlighter.component;
 
 import br.com.compiler.portugolo.ui.highlighter.tokenMarker.*;
+import com.sun.deploy.net.proxy.RemoveCommentReader;
 
 import javax.swing.text.*;
 import java.awt.*;
@@ -69,13 +70,27 @@ public class SyntaxUtilities {
             char c1 = textArray[i];
             char c2 = match[j];
             if (ignoreCase) {
-                c1 = Character.toUpperCase(c1);
-                c2 = Character.toUpperCase(c2);
+                c1 = Character.toUpperCase(RemovedorAcentos.remover(c1));
+                c2 = Character.toUpperCase(RemovedorAcentos.remover(c2));
             }
             if (c1 != c2)
                 return false;
         }
         return true;
+    }
+
+    private static class RemovedorAcentos {
+
+        private static final String acentuado = "çÇáéíóúýÁÉÍÓÚÝàèìòùÀÈÌÒÙãõñäëïöüÿÄËÏÖÜÃÕÑâêîôûÂÊÎÔÛ";
+        private static final String semAcento = "cCaeiouyAEIOUYaeiouAEIOUaonaeiouyAEIOUAONaeiouAEIOU";
+
+        public static char remover(char letra) {
+            int idx = acentuado.indexOf(letra);
+            if(idx > -1) {
+                return semAcento.charAt(idx);
+            }
+            return letra;
+        }
     }
 
     /**

@@ -47,7 +47,7 @@ public class DefaultInputHandler extends InputHandler {
 
         addKeyBinding("HOME", HOME);
         addKeyBinding("END", END);
-        addKeyBinding("C+A", SELECT_ALL);
+        addKeyBinding("C+T", SELECT_ALL);
         addKeyBinding("S+HOME", SELECT_HOME);
         addKeyBinding("S+END", SELECT_END);
         addKeyBinding("C+HOME", DOCUMENT_HOME);
